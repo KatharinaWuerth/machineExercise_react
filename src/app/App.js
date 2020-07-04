@@ -1,32 +1,53 @@
-import React, { useState } from 'react';
-import MachineList from '../machine/MachineList';
-import machines from '../mockdata';
-import NewMachineForm from '../machine/NewMachineForm';
+import React, { useState } from "react";
+import MachineList from "../machine/MachineList";
+import machines from "../mockdata";
+import NewMachineForm from "../machine/NewMachineForm";
 
 export default function App() {
   const [list, setList] = useState(machines);
-  // state fuer currentMachine muss in der App sein, da die Form nicht weiss, ob auf edit gedrueckt wurde - currentMachine wird dann nach unten durchgereicht]
-  const [currentMachine, setCurrentMachine] = useState({});
 
-  // eine id wäre zum identifieziren besser
+  // state fuer currentMachine muss in der App sein, da die Form nicht weiss, ob auf edit gedrueckt wurde - currentMachine wird dann nach unten durchgereicht]
+  const [currentMachine, setCurrentMachine] = useState({
+    name: "",
+    currentValue: "",
+  });
+
+  const [machineId, setMachineId] = useState(6);
+
   function handleDelete(name) {
-    const updatedList = list.filter(machine => machine.name !== name);
+    const updatedList = list.filter((machine) => machine.name !== name);
     setList(updatedList);
   }
 
   function handleCreate(name, value) {
-    const newMachine = { name: name, currentValue: value };
-    const newList = [...list, newMachine];
-    setList(newList);
+    const newList = [...list];
+    const newMachine = {
+      name: name,
+      currentValue: Number(value),
+      id: machineId,
+    };
+    setList([...newList, newMachine]);
+    setMachineId(machineId + 1);
   }
 
-  // habe maschine, die ich editieren möchte, identifiziert. Jetzt müsste ich sie in die Form einsetzten, bearbeiten können und dann fragen, ob es die machine schon gibt, wenn ja, die alte maschine mit den neuen Daten überschreiben
-  function handleEdit(name) {
-    let editMachine = list.filter(machine => machine.name === name);
+  function handleEdit(id) {
+    let editMachine = list.filter((machine) => machine.id === id);
     editMachine = editMachine[0];
-    console.log('handleEdit', editMachine);
     setCurrentMachine(editMachine);
   }
+
+  function handleUpdate(name, value) {
+    const newList = [...list];
+
+    let index = newList.map((machine) => machine.id).indexOf(currentMachine.id);
+
+    newList[index].name = name;
+    newList[index].currentValue = value;
+
+    setList(newList);
+    setCurrentMachine({ name: "", currentValue: "" });
+  }
+
   return (
     <div>
       <MachineList
@@ -34,7 +55,11 @@ export default function App() {
         onDelete={handleDelete}
         onEdit={handleEdit}
       />
-      <NewMachineForm onCreate={handleCreate} currentMachine={currentMachine} />
+      <NewMachineForm
+        onCreate={handleCreate}
+        currentMachine={currentMachine}
+        onUpdate={handleUpdate}
+      />
     </div>
   );
 }

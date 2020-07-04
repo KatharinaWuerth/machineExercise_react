@@ -31752,9 +31752,9 @@ function Machine(_ref) {
     className: "machineName"
   }, machine.name), _react.default.createElement("div", {
     className: "currentValue"
-  }, machine.currentValue), _react.default.createElement("p", null, "Status:", ' ', _react.default.createElement("span", {
-    className: machine.currentValue >= 50 ? 'green' : 'red'
-  }, machine.currentValue >= 50 ? 'Good' : 'Attention')), _react.default.createElement("button", {
+  }, machine.currentValue), _react.default.createElement("p", null, "Status:", " ", _react.default.createElement("span", {
+    className: machine.currentValue >= 50 ? "green" : "red"
+  }, machine.currentValue >= 50 ? "Good" : "Attention")), _react.default.createElement("button", {
     className: "button",
     onClick: function onClick() {
       return onDelete(machine.name);
@@ -31762,7 +31762,7 @@ function Machine(_ref) {
   }, "remove"), _react.default.createElement("button", {
     className: "button",
     onClick: function onClick() {
-      return onEdit(machine.name);
+      return onEdit(machine.id);
     }
   }, "edit"));
 }
@@ -31804,19 +31804,24 @@ Object.defineProperty(exports, "__esModule", {
 exports.default = void 0;
 var machines = [{
   name: 'Machine 1',
-  currentValue: 76
+  currentValue: 76,
+  id: 1
 }, {
   name: 'Machine 2',
-  currentValue: 92
+  currentValue: 92,
+  id: 2
 }, {
   name: 'Machine 3',
-  currentValue: 93
+  currentValue: 93,
+  id: 3
 }, {
   name: 'Machine 4',
-  currentValue: 29
+  currentValue: 29,
+  id: 4
 }, {
   name: 'Machine 5',
-  currentValue: 51
+  currentValue: 51,
+  id: 5
 }];
 var _default = machines;
 exports.default = _default;
@@ -31848,38 +31853,64 @@ function _iterableToArrayLimit(arr, i) { if (!(Symbol.iterator in Object(arr) ||
 
 function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
 
-//Problem: er reicht von der App die currentMachine richtig bis in die componente NewMachineForm, aber er setzt sie nicht in den state
 function NewMachineForm(_ref) {
   var onCreate = _ref.onCreate,
+      onUpdate = _ref.onUpdate,
       currentMachine = _ref.currentMachine;
-  console.log('vor dem State', currentMachine);
 
   var _useState = (0, _react.useState)(currentMachine),
       _useState2 = _slicedToArray(_useState, 2),
       form = _useState2[0],
       setForm = _useState2[1];
 
+  var _useState3 = (0, _react.useState)(!currentMachine.name),
+      _useState4 = _slicedToArray(_useState3, 2),
+      createMode = _useState4[0],
+      setCreateMode = _useState4[1]; // "asgasg" = truthy
+  // "", null, undefined = falsy
+  //
+  // truthy -> boolean -> true
+  //
+  // !!"asgasg" -> true
+  // "asasg" -> true
+  // "" -> false
+  // null -> false
+  // undefined -> false
+  //
+  // 0 falsy
+  // 1 truthy
+  // 5 truthy
+  // !!zahl     zahl != 0 und zahl nicht null und nicht undefined
+
+
   (0, _react.useEffect)(function () {
-    console.log('UseEffect', form);
-  }, [form]);
+    setForm(currentMachine);
+    setCreateMode(!currentMachine.name);
+  }, [currentMachine]);
 
   function handleOnSubmit(event) {
     event.preventDefault();
-    onCreate(form.name, form.currentValue);
+
+    if (createMode) {
+      onCreate(form.name, form.currentValue);
+      form.name = "";
+      form.currentValue = "";
+    } else {
+      onUpdate(form.name, form.currentValue);
+      form.name = "";
+      form.currentValue = "";
+    }
   } // wir holen die form, die ja schon im state existiert und weisen dem key (dessen Namen wir nicht kennen, da es entweder nameOfNewMachine oder valueOfNewMachine sein kann --> deshalb [] anstelle von .) das value zu
 
 
   function onInputChange(key, value) {
-    console.log('onInputChange', key, value);
-
     var newForm = _objectSpread({}, form);
 
     newForm[key] = value;
     setForm(newForm);
-  }
-
-  console.log('vor return', form); //onInputChange: gebe ihm key ('nameNewMachine') und value (event.target.value) mit
+  } //onInputChange: gebe ihm key ('nameNewMachine') und value (event.target.value) mit
   //value bei input ist der zweite Teil der kontrollierten componente / info muss rauf und runter gehen
+
 
   return _react.default.createElement("div", {
     className: "containerNewMachineForm"
@@ -31892,20 +31923,20 @@ function NewMachineForm(_ref) {
     type: "text",
     name: "name",
     onChange: function onChange(event) {
-      return onInputChange('name', event.target.value);
+      return onInputChange("name", event.target.value);
     },
     value: form.name
   })), _react.default.createElement("label", null, "Value", _react.default.createElement("input", {
     type: "number",
     name: "value",
     onChange: function onChange(event) {
-      return onInputChange('valueNewMachine', Number(event.target.value));
+      return onInputChange("currentValue", event.target.value);
     },
     value: form.currentValue
   })), _react.default.createElement("button", {
     className: "button",
     type: "submit"
-  }, "Create new Machine")));
+  }, createMode ? "Create new Machine" : "Edit Machine")));
 }
 },{"react":"../node_modules/react/index.js"}],"app/App.js":[function(require,module,exports) {
 "use strict";
@@ -31952,11 +31983,18 @@ function App() {
       setList = _useState2[1]; // state fuer currentMachine muss in der App sein, da die Form nicht weiss, ob auf edit gedrueckt wurde - currentMachine wird dann nach unten durchgereicht]
 
 
-  var _useState3 = (0, _react.useState)({}),
+  var _useState3 = (0, _react.useState)({
+    name: "",
+    currentValue: ""
+  }),
       _useState4 = _slicedToArray(_useState3, 2),
       currentMachine = _useState4[0],
-      setCurrentMachine = _useState4[1]; // eine id wäre zum identifieziren besser
+      setCurrentMachine = _useState4[1];
 
+  var _useState5 = (0, _react.useState)(6),
+      _useState6 = _slicedToArray(_useState5, 2),
+      machineId = _useState6[0],
+      setMachineId = _useState6[1];
 
   function handleDelete(name) {
     var updatedList = list.filter(function (machine) {
@@ -31966,22 +32004,41 @@ function App() {
   }
 
   function handleCreate(name, value) {
+    var newList = _toConsumableArray(list);
+
     var newMachine = {
       name: name,
-      currentValue: value
+      currentValue: Number(value),
+      id: machineId
     };
-    var newList = [].concat(_toConsumableArray(list), [newMachine]);
-    setList(newList);
+    setList([].concat(_toConsumableArray(newList), [newMachine]));
+    setMachineId(machineId + 1);
   } // habe maschine, die ich editieren möchte, identifiziert. Jetzt müsste ich sie in die Form einsetzten, bearbeiten können und dann fragen, ob es die machine schon gibt, wenn ja, die alte maschine mit den neuen Daten überschreiben
 
 
-  function handleEdit(name) {
+  function handleEdit(id) {
+    console.log(id);
     var editMachine = list.filter(function (machine) {
-      return machine.name === name;
+      return machine.id === id;
     });
+    console.log(editMachine);
     editMachine = editMachine[0];
-    console.log('handleEdit', editMachine);
     setCurrentMachine(editMachine);
+  }
+
+  function handleUpdate(name, value) {
+    var newList = _toConsumableArray(list);
+
+    var index = newList.map(function (machine) {
+      return machine.id;
+    }).indexOf(currentMachine.id);
+    newList[index].name = name;
+    newList[index].currentValue = value;
+    setList(newList);
+    setCurrentMachine({
+      name: "",
+      currentValue: ""
+    });
   }
 
   return _react.default.createElement("div", null, _react.default.createElement(_MachineList.default, {
@@ -31990,7 +32047,8 @@ function App() {
     onEdit: handleEdit
   }), _react.default.createElement(_NewMachineForm.default, {
     onCreate: handleCreate,
-    currentMachine: currentMachine
+    currentMachine: currentMachine,
+    onUpdate: handleUpdate
   }));
 }
 },{"react":"../node_modules/react/index.js","../machine/MachineList":"machine/MachineList.js","../mockdata":"mockdata.js","../machine/NewMachineForm":"machine/NewMachineForm.js"}],"index.js":[function(require,module,exports) {
@@ -32033,7 +32091,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "55623" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "58650" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
